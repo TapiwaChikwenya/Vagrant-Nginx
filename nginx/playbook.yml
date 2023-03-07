@@ -1,0 +1,46 @@
+---
+# This playbook sets up a local virtual server that has OpenCV and access to the host computer's webcam,
+# and that streams the webcam feed on a webpage.
+
+- name: Set up local virtual server with OpenCV and webcam access
+  hosts: localhost
+  tasks:
+    - name: Install OpenCV
+      apt:
+        name: opencv-python
+        state: latest
+
+    - name: Install web server
+      apt:
+        name: apache2
+        state: latest
+
+    - name: Install mod_wsgi for Apache
+      apt:
+        name: libapache2-mod-wsgi
+        state: latest
+
+    - name: Enable mod_wsgi for Apache
+      apache2_module:
+        name: wsgi
+        state: present
+
+    - name: Create Python script to stream webcam feed
+      copy:
+        src: "webcam-stream.py"
+        dest: "/var/www/webcam-stream.py"
+
+    - name: Create Apache configuration file for webcam stream
+      copy:
+        src: "webcam-stream.conf"
+        dest: "/etc/apache2/sites-available/webcam-stream.conf"
+
+    - name: Enable Apache configuration for webcam stream
+      apache2_module:
+        name: "sites-available/webcam-stream"
+        state: present
+
+    - name: Restart Apache to apply changes
+      service:
+        name: apache2
+        state: restarted
